@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ปฏิทิน 2569 — ตารางปฏิบัติธรรม & วันหยุด</title>
+<style>
+
+:root{
+  --bg:#f1f5f9; --header-bg:#2c3e8c; --header-text:#fff;
+  --card-bg:#fff; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb;
+  --bot:#bfdbfe; --bot-ink:#1e3a8a;
+  --pub:#fde68a; --pub-ink:#92400e;
+  --retreat:#bbf7d0; --retreat-ink:#065f46;
+  --bridge:#e9d5ff; --bridge-ink:#6b21a8;
+  --weekend:#fecaca; --weekend-ink:#991b1b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:"Sarabun","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.topbar{background:var(--header-bg);color:var(--header-text);
+  padding:14px 24px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50}
+.topbar h1{margin:0;font-size:20px;font-weight:700}
+.topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
+.topbar .nav{display:flex;gap:8px}
+.topbar button.icon{background:rgba(255,255,255,.15);color:#fff;border:0;width:32px;height:32px;
+  border-radius:50%;cursor:pointer;font-size:14px}
+.topbar button.icon:hover{background:rgba(255,255,255,.25)}
+.legend{background:#fff;padding:8px 24px;display:flex;flex-wrap:wrap;gap:16px;
+  align-items:center;border-bottom:1px solid var(--border);font-size:12px}
+.legend .label{font-weight:600;color:var(--muted)}
+.legend .item{display:inline-flex;align-items:center;gap:6px}
+.legend .sw{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.08)}
+.filters{background:#fff;padding:10px 24px;display:flex;flex-wrap:wrap;gap:12px;
+  align-items:center;border-bottom:1px solid var(--border);font-size:13px;
+  position:sticky;top:56px;z-index:40}
+.filters .flabel{font-weight:600;color:var(--muted)}
+.dd{position:relative}
+.dd>button{background:#f8fafc;border:1px solid var(--border);border-radius:8px;
+  padding:6px 10px;cursor:pointer;font:inherit;color:var(--text);
+  display:inline-flex;align-items:center;gap:6px;min-width:240px;justify-content:space-between}
+.dd>button:hover{background:#f1f5f9}
+.dd>button .caret{color:var(--muted)}
+.dd .menu{position:absolute;top:calc(100% + 4px);left:0;min-width:320px;max-width:440px;
+  background:#fff;border:1px solid var(--border);border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);padding:8px;display:none;z-index:60;
+  max-height:60vh;overflow:auto}
+.dd.open .menu{display:block}
+.dd .menu .row{display:flex;gap:6px;margin-bottom:8px}
+.dd .menu .row button{flex:1;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;
+  padding:4px 8px;cursor:pointer;font:inherit;color:var(--text);font-size:12px}
+.dd .menu .row button:hover{background:#e2e8f0}
+.dd .menu label{display:flex;align-items:center;gap:8px;padding:5px 6px;
+  border-radius:6px;cursor:pointer;font-size:12.5px;line-height:1.35}
+.dd .menu label:hover{background:#f8fafc}
+.dd .menu input[type=checkbox]{accent-color:#065f46}
+.dd .menu .swatch{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.reset{background:transparent;border:1px dashed var(--border);border-radius:8px;
+  padding:6px 10px;cursor:pointer;font:inherit;color:var(--muted);font-size:12px}
+.reset:hover{color:var(--text);border-color:var(--muted)}
+.count{color:var(--muted);font-size:12px;margin-left:auto}
+.wrap{padding:18px 24px 40px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:820px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.grid{grid-template-columns:1fr}}
+.month{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;
+  padding:10px 10px 12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.month .mhead{display:flex;align-items:baseline;justify-content:space-between;margin:2px 4px 8px}
+.month .mhead .mname{font-weight:700;font-size:14px;color:#111827}
+.month .mhead .mname .th{color:var(--muted);font-weight:500;margin-left:4px;font-size:12px}
+.dow,.days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dow div{text-align:center;font-size:10.5px;font-weight:600;color:var(--muted);padding:4px 0}
+.day{position:relative;aspect-ratio:1/1;border-radius:6px;background:#fafafa;
+  border:1px solid #f1f5f9;font-size:11.5px;color:#111827;display:flex;align-items:flex-start;
+  justify-content:flex-start;padding:3px 4px;line-height:1}
+.day.blank{background:transparent;border-color:transparent}
+.day.weekend{background:var(--weekend);color:var(--weekend-ink)}
+.day.bot{background:var(--bot);color:var(--bot-ink);font-weight:700}
+.day.pub{background:var(--pub);color:var(--pub-ink);font-weight:700}
+.day.bridge{background:var(--bridge);color:var(--bridge-ink);font-weight:700}
+.day.both::after{content:"";position:absolute;right:3px;top:3px;width:6px;height:6px;
+  border-radius:50%;background:var(--pub-ink)}
+.dots{position:absolute;bottom:3px;left:3px;right:3px;display:flex;gap:2px;flex-wrap:wrap}
+.dot{width:6px;height:6px;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.6)}
+.day.retreat{background:var(--retreat)}
+.day.retreat.weekend{background:linear-gradient(135deg,var(--retreat) 50%,var(--weekend) 50%)}
+.day.retreat.pub{background:linear-gradient(135deg,var(--retreat) 50%,var(--pub) 50%)}
+.day.retreat.bot{background:linear-gradient(135deg,var(--retreat) 50%,var(--bot) 50%)}
+.day.retreat.bridge{background:linear-gradient(135deg,var(--retreat) 50%,var(--bridge) 50%)}
+#tooltip{position:fixed;pointer-events:none;z-index:100;background:#111827;color:#fff;
+  padding:8px 10px;border-radius:8px;font-size:11.5px;line-height:1.45;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:320px;display:none}
+#tooltip .ttip-date{font-weight:700;margin-bottom:4px}
+#tooltip .ttip-section{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.18)}
+#tooltip .ttip-row{display:flex;gap:6px;align-items:flex-start;margin:2px 0}
+#tooltip .ttip-row .swatch{width:8px;height:8px;border-radius:50%;margin-top:3px;flex:0 0 auto}
+.footer{margin-top:22px;font-size:11.5px;color:var(--muted);line-height:1.6;
+  background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.footer h4{margin:0 0 6px;font-size:12.5px;color:#111827}
+.footer ul{margin:0;padding-left:18px}
+@media print{.topbar .nav,.filters,#tooltip{display:none!important}body{background:#fff}.month{break-inside:avoid;box-shadow:none}}
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>ปฏิทิน 2569 — ตารางปฏิบัติธรรม &amp; วันหยุด</h1>
+    <div class="sub">Dhamma Retreat Schedule &amp; Thailand Holiday Planner 2026</div>
+  </div>
+  <div class="nav">
+    <button class="icon" title="พิมพ์ / Save as PDF" onclick="window.print()">⎙</button>
+  </div>
+</div>
+
+<div class="legend">
+  <span class="label">Legend:</span>
+  <span class="item"><span class="sw" style="background:var(--bot)"></span>BOT / Bank Holiday</span>
+  <span class="item"><span class="sw" style="background:var(--pub)"></span>General Public Holiday</span>
+  <span class="item"><span class="sw" style="background:var(--retreat)"></span>Dhamma Retreat (each dot = 1 course)</span>
+  <span class="item"><span class="sw" style="background:var(--bridge)"></span>Bridge Day (take 1 day leave = long weekend)</span>
+  <span class="item"><span class="sw" style="background:var(--weekend)"></span>Weekend</span>
+</div>
+
+<div class="filters">
+  <span class="flabel">ตัวกรอง / Filters:</span>
+  <div class="dd" id="ddVenue">
+    <button type="button" onclick="toggleDD('ddVenue')">
+      <span>สถานที่ — <span id="venueSummary">ทั้งหมด</span></span>
+      <span class="caret">▾</span>
+    </button>
+    <div class="menu">
+      <div class="row">
+        <button type="button" onclick="setAll('venue', true)">เลือกทั้งหมด</button>
+        <button type="button" onclick="setAll('venue', false)">ล้าง</button>
+      </div>
+      <div id="venueList"></div>
+    </div>
+  </div>
+  <div class="dd" id="ddCourse">
+    <button type="button" onclick="toggleDD('ddCourse')">
+      <span>หลักสูตร — <span id="courseSummary">ทั้งหมด</span></span>
+      <span class="caret">▾</span>
+    </button>
+    <div class="menu">
+      <div class="row">
+        <button type="button" onclick="setAll('course', true)">เลือกทั้งหมด</button>
+        <button type="button" onclick="setAll('course', false)">ล้าง</button>
+      </div>
+      <div id="courseList"></div>
+    </div>
+  </div>
+  <button class="reset" type="button" onclick="resetFilters()">รีเซ็ตตัวกรอง</button>
+  <span class="count" id="countLine"></span>
+</div>
+
+<div class="wrap">
+  <div class="grid" id="grid"></div>
+  <div class="footer">
+    <h4>หมายเหตุ / Notes</h4>
+    <ul>
+      <li>วันหยุดราชการและธนาคารอ้างอิงประกาศ ครม. (12 พ.ย. 2567) และธนาคารแห่งประเทศไทย ปี 2569 — โปรดยืนยันกับประกาศทางการก่อนวางแผนเดินทาง</li>
+      <li>รายการคอร์สปฏิบัติธรรมเป็น <b>ข้อมูลตัวอย่าง</b> รวมหลายสถานที่ในประเทศไทย — แก้ไขได้ในตัวแปร <code>RETREATS</code> ของไฟล์ HTML</li>
+      <li>Hover วันที่ใด ๆ เพื่อดูสถานที่ + หลักสูตรของคอร์สในวันนั้น (จุดเขียว 1 จุด = 1 คอร์ส)</li>
+      <li>ใช้ตัวกรองด้านบนเพื่อเลือกเฉพาะสถานที่หรือหลักสูตรที่สนใจ — ปฏิทินจะอัปเดตทันที</li>
+    </ul>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+
+const YEAR = 2026;
+
+const HOLIDAYS = {
+  '2026-01-01': { type:'both', th:'วันขึ้นปีใหม่', en:'New Year Day' },
+  '2026-01-02': { type:'bot',  th:'วันหยุดพิเศษ (ธนาคาร)', en:'Special Bank Holiday' },
+  '2026-03-03': { type:'both', th:'วันมาฆบูชา', en:'Makha Bucha Day' },
+  '2026-04-06': { type:'both', th:'วันจักรี', en:'Chakri Memorial Day' },
+  '2026-04-13': { type:'both', th:'วันสงกรานต์', en:'Songkran Festival' },
+  '2026-04-14': { type:'both', th:'วันสงกรานต์', en:'Songkran Festival' },
+  '2026-04-15': { type:'both', th:'วันสงกรานต์', en:'Songkran Festival' },
+  '2026-05-01': { type:'bot',  th:'วันแรงงานแห่งชาติ', en:'National Labour Day' },
+  '2026-05-04': { type:'both', th:'วันฉัตรมงคล', en:'Coronation Day (Rama X)' },
+  '2026-05-11': { type:'pub',  th:'วันพืชมงคล (โดยประมาณ)', en:'Royal Ploughing (approx.)' },
+  '2026-05-31': { type:'both', th:'วันวิสาขบูชา', en:'Visakha Bucha Day' },
+  '2026-06-01': { type:'both', th:'ชดเชยวันวิสาขบูชา', en:'Visakha Bucha (in lieu)' },
+  '2026-06-03': { type:'both', th:'วันเฉลิมพระชนมพรรษา สมเด็จพระราชินี', en:'H.M. Queen Suthida Birthday' },
+  '2026-07-28': { type:'both', th:'วันเฉลิมพระชนมพรรษา ร.10', en:'H.M. King Vajiralongkorn Birthday' },
+  '2026-07-29': { type:'both', th:'วันอาสาฬหบูชา', en:'Asanha Bucha Day' },
+  '2026-07-30': { type:'pub',  th:'วันเข้าพรรษา', en:'Khao Phansa (Buddhist Lent)' },
+  '2026-08-12': { type:'both', th:'วันเฉลิมพระชนมพรรษา พระบรมราชชนนีพันปีหลวง / วันแม่', en:'Queen Mother Birthday / Mothers Day' },
+  '2026-10-13': { type:'both', th:'วันคล้ายวันสวรรคต ร.9', en:'King Bhumibol Memorial Day' },
+  '2026-10-23': { type:'both', th:'วันปิยมหาราช', en:'Chulalongkorn Memorial Day' },
+  '2026-12-05': { type:'both', th:'วันคล้ายวันเฉลิมพระชนมพรรษา ร.9 / วันพ่อ', en:'King Bhumibol Birthday / Fathers Day' },
+  '2026-12-07': { type:'both', th:'ชดเชยวันพ่อ', en:'Fathers Day (in lieu)' },
+  '2026-12-10': { type:'both', th:'วันรัฐธรรมนูญ', en:'Constitution Day' },
+  '2026-12-31': { type:'both', th:'วันสิ้นปี', en:'New Years Eve' },
+};
+
+const BRIDGES = {
+  '2026-04-07': 'ลา 1 วัน หยุดยาว 4 – 10 เม.ย. (จักรี + สงกรานต์)',
+  '2026-05-29': 'ลา 1 วัน หยุดยาว 29 พ.ค. – 1 มิ.ย. (วิสาขบูชา)',
+  '2026-06-02': 'ลา 1 วัน หยุดยาว 30 พ.ค. – 3 มิ.ย. (วันเฉลิมฯ พระราชินี)',
+  '2026-07-27': 'ลา 1 วัน หยุดยาว 25 – 30 ก.ค. (ร.10 + อาสาฬห + เข้าพรรษา)',
+  '2026-07-31': 'ลา 1 วัน หยุดยาว 28 ก.ค. – 2 ส.ค. (ต่อจากเข้าพรรษา)',
+  '2026-08-13': 'ลา 1 วัน หยุดยาว 12 – 16 ส.ค. (วันแม่)',
+  '2026-10-12': 'ลา 1 วัน หยุดยาว 10 – 13 ต.ค. (ร.9)',
+  '2026-10-22': 'ลา 1 วัน หยุดยาว 22 – 25 ต.ค. (วันปิยมหาราช)',
+  '2026-12-11': 'ลา 1 วัน หยุดยาว 10 – 13 ธ.ค. (วันรัฐธรรมนูญ)',
+};
+
+// RETREATS — sample dataset across major Thai meditation centres.
+// Each entry: { start, end, venue (สถานที่), course (หลักสูตร) }
+const RETREATS = [
+  ...Array.from({length:12}, (_,i) => ({
+    start: '2026-' + String(i+1).padStart(2,'0') + '-01',
+    end:   '2026-' + String(i+1).padStart(2,'0') + '-10',
+    venue: 'สวนโมกข์นานาชาติ ไชยา (Suan Mokkh IDP)',
+    course: 'อานาปานสติภาวนา 10 วัน (English)',
+  })),
+  { start:'2026-01-16', end:'2026-01-18', venue:'ยุวพุทธิกสมาคมแห่งประเทศไทย', course:'วิปัสสนากรรมฐานเบื้องต้น 3 วัน' },
+  { start:'2026-03-13', end:'2026-03-15', venue:'ยุวพุทธิกสมาคมแห่งประเทศไทย', course:'วิปัสสนากรรมฐานเบื้องต้น 3 วัน' },
+  { start:'2026-05-15', end:'2026-05-17', venue:'ยุวพุทธิกสมาคมแห่งประเทศไทย', course:'วิปัสสนากรรมฐานเบื้องต้น 3 วัน' },
+  { start:'2026-07-17', end:'2026-07-19', venue:'ยุวพุทธิกสมาคมแห่งประเทศไทย', course:'วิปัสสนากรรมฐานเบื้องต้น 3 วัน' },
+  { start:'2026-09-18', end:'2026-09-20', venue:'ยุวพุทธิกสมาคมแห่งประเทศไทย', course:'วิปัสสนากรรมฐานเบื้องต้น 3 วัน' },
+  { start:'2026-11-13', end:'2026-11-15', venue:'ยุวพุทธิกสมาคมแห่งประเทศไทย', course:'วิปัสสนากรรมฐานเบื้องต้น 3 วัน' },
+  { start:'2026-10-09', end:'2026-10-15', venue:'ยุวพุทธิกสมาคมแห่งประเทศไทย', course:'หลักสูตรพัฒนาจิต 7 วัน' },
+  { start:'2026-02-14', end:'2026-02-20', venue:'วัดมเหยงคณ์ อยุธยา', course:'วิปัสสนากรรมฐาน 7 วัน (สายพอง-ยุบ)' },
+  { start:'2026-06-13', end:'2026-06-19', venue:'วัดมเหยงคณ์ อยุธยา', course:'วิปัสสนากรรมฐาน 7 วัน (สายพอง-ยุบ)' },
+  { start:'2026-09-05', end:'2026-09-11', venue:'วัดมเหยงคณ์ อยุธยา', course:'วิปัสสนากรรมฐาน 7 วัน (สายพอง-ยุบ)' },
+  { start:'2026-12-19', end:'2026-12-26', venue:'วัดมเหยงคณ์ อยุธยา', course:'วิปัสสนากรรมฐานส่งท้ายปี 8 วัน' },
+  { start:'2026-02-25', end:'2026-03-08', venue:'ศูนย์วิปัสสนาธุระ (Dhamma Kamala)', course:'หลักสูตร 10 วัน ระบบโกเอ็นก้า' },
+  { start:'2026-08-19', end:'2026-08-30', venue:'ศูนย์วิปัสสนาธุระ (Dhamma Kamala)', course:'หลักสูตร 10 วัน ระบบโกเอ็นก้า' },
+  { start:'2026-11-25', end:'2026-12-06', venue:'ศูนย์วิปัสสนาธุระ (Dhamma Kamala)', course:'หลักสูตร 10 วัน ระบบโกเอ็นก้า' },
+  { start:'2026-04-24', end:'2026-04-26', venue:'หมู่บ้านพลัม ประเทศไทย', course:'Day of Mindfulness — สติเย็น 3 วัน' },
+  { start:'2026-10-30', end:'2026-11-01', venue:'หมู่บ้านพลัม ประเทศไทย', course:'Day of Mindfulness — สติเย็น 3 วัน' },
+  { start:'2026-07-04', end:'2026-07-11', venue:'หมู่บ้านพลัม ประเทศไทย', course:'Summer Retreat — สติทุกย่างก้าว 7 วัน' },
+  { start:'2026-07-30', end:'2026-10-26', venue:'วัดป่านานาชาติ อุบลราชธานี', course:'จำพรรษา (Rains Retreat 3 เดือน)' },
+];
+
+const allVenues = Array.from(new Set(RETREATS.map(r => r.venue))).sort();
+const allCourses = Array.from(new Set(RETREATS.map(r => r.course))).sort();
+const venueColor = {};
+const palette = ['#065f46','#0f766e','#1d4ed8','#7c3aed','#be185d','#b45309','#0e7490','#4d7c0f','#92400e'];
+allVenues.forEach((v,i) => venueColor[v] = palette[i % palette.length]);
+
+const state = {
+  venues: new Set(allVenues),
+  courses: new Set(allCourses),
+};
+
+const MONTH_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTH_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const MONTH_TH_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const DAY_TH = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+function key(y,m,d){ return y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0'); }
+function inRange(start, end, target){ return target >= start && target <= end; }
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function buildFilterUI(){
+  const venueList = document.getElementById('venueList');
+  venueList.innerHTML = allVenues.map(v =>
+    '<label><input type="checkbox" data-kind="venue" value="' + esc(v) + '" checked />' +
+    '<span class="swatch" style="background:' + venueColor[v] + '"></span>' +
+    '<span>' + esc(v) + '</span></label>'
+  ).join('');
+  venueList.querySelectorAll('input').forEach(cb => cb.addEventListener('change', onFilterChange));
+
+  const courseList = document.getElementById('courseList');
+  courseList.innerHTML = allCourses.map(c =>
+    '<label><input type="checkbox" data-kind="course" value="' + esc(c) + '" checked />' +
+    '<span>' + esc(c) + '</span></label>'
+  ).join('');
+  courseList.querySelectorAll('input').forEach(cb => cb.addEventListener('change', onFilterChange));
+}
+
+function onFilterChange(e){
+  const kind = e.target.dataset.kind;
+  const val = e.target.value;
+  const set = kind === 'venue' ? state.venues : state.courses;
+  if (e.target.checked) set.add(val); else set.delete(val);
+  render();
+}
+
+function setAll(kind, on){
+  const list = kind === 'venue' ? allVenues : allCourses;
+  const set = kind === 'venue' ? state.venues : state.courses;
+  set.clear();
+  if (on) list.forEach(v => set.add(v));
+  const listId = kind === 'venue' ? 'venueList' : 'courseList';
+  document.querySelectorAll('#' + listId + ' input').forEach(cb => cb.checked = on);
+  render();
+}
+
+function resetFilters(){ setAll('venue', true); setAll('course', true); }
+
+function toggleDD(id){
+  const el = document.getElementById(id);
+  document.querySelectorAll('.dd.open').forEach(d => { if (d !== el) d.classList.remove('open'); });
+  el.classList.toggle('open');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.dd')) document.querySelectorAll('.dd.open').forEach(d => d.classList.remove('open'));
+});
+
+function activeRetreats(){
+  return RETREATS.filter(r => state.venues.has(r.venue) && state.courses.has(r.course));
+}
+function retreatsOn(dateStr){
+  return activeRetreats().filter(r => inRange(r.start, r.end, dateStr));
+}
+
+function updateSummary(){
+  const vS = document.getElementById('venueSummary');
+  const cS = document.getElementById('courseSummary');
+  vS.textContent = state.venues.size === allVenues.length ? 'ทั้งหมด' :
+                   state.venues.size === 0 ? '— ไม่เลือก —' :
+                   state.venues.size + '/' + allVenues.length;
+  cS.textContent = state.courses.size === allCourses.length ? 'ทั้งหมด' :
+                   state.courses.size === 0 ? '— ไม่เลือก —' :
+                   state.courses.size + '/' + allCourses.length;
+  document.getElementById('countLine').textContent =
+    'แสดง ' + activeRetreats().length + ' คอร์ส จากทั้งหมด ' + RETREATS.length;
+}
+
+function fmtDateRange(startStr, endStr){
+  const [sy,sm,sd] = startStr.split('-').map(Number);
+  const [ey,em,ed] = endStr.split('-').map(Number);
+  if (sm === em) return sd + ' – ' + ed + ' ' + MONTH_TH_SHORT[sm-1] + ' ' + (sy+543);
+  return sd + ' ' + MONTH_TH_SHORT[sm-1] + ' – ' + ed + ' ' + MONTH_TH_SHORT[em-1] + ' ' + (sy+543);
+}
+
+function renderMonth(year, monthIdx){
+  const first = new Date(year, monthIdx, 1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(year, monthIdx+1, 0).getDate();
+
+  let html = '<div class="month"><div class="mhead"><div class="mname">' +
+    MONTH_EN[monthIdx] + ' ' + year +
+    ' <span class="th">' + MONTH_TH[monthIdx] + ' ' + (year+543) + '</span></div></div>' +
+    '<div class="dow">' + DOW.map(d => '<div>' + d + '</div>').join('') + '</div>' +
+    '<div class="days">';
+
+  for (let i = 0; i < startDow; i++) html += '<div class="day blank"></div>';
+
+  for (let d = 1; d <= daysInMonth; d++){
+    const k = key(year, monthIdx+1, d);
+    const dow = new Date(year, monthIdx, d).getDay();
+    const isWeekend = (dow === 0 || dow === 6);
+    const holiday = HOLIDAYS[k];
+    const bridge = BRIDGES[k];
+    const dayRetreats = retreatsOn(k);
+
+    const classes = ['day'];
+    if (dayRetreats.length) classes.push('retreat');
+    if (holiday) {
+      if (holiday.type === 'both') classes.push('bot','both');
+      else if (holiday.type === 'bot') classes.push('bot');
+      else if (holiday.type === 'pub') classes.push('pub');
+    } else if (bridge) {
+      classes.push('bridge');
+    } else if (isWeekend) {
+      classes.push('weekend');
+    }
+
+    const dotsHtml = dayRetreats.length
+      ? '<div class="dots">' + dayRetreats.map(r =>
+          '<span class="dot" style="background:' + venueColor[r.venue] + '"></span>'
+        ).join('') + '</div>'
+      : '';
+
+    const tipParts = [];
+    tipParts.push('<div class="ttip-date">' + d + ' ' + MONTH_TH[monthIdx] + ' ' + (year+543) + ' · ' + DAY_TH[dow] + '</div>');
+    if (holiday) tipParts.push('<div>🟨 <b>' + esc(holiday.th) + '</b><br><span style="opacity:.75">' + esc(holiday.en) + '</span></div>');
+    if (bridge && !holiday) tipParts.push('<div>🟣 ' + esc(bridge) + '</div>');
+    if (!holiday && !bridge && isWeekend) tipParts.push('<div style="opacity:.75">วันหยุดเสาร์-อาทิตย์</div>');
+    if (dayRetreats.length){
+      tipParts.push('<div class="ttip-section"><b>ปฏิบัติธรรม (' + dayRetreats.length + ' คอร์ส)</b></div>');
+      for (const r of dayRetreats){
+        tipParts.push('<div class="ttip-row">' +
+          '<span class="swatch" style="background:' + venueColor[r.venue] + '"></span>' +
+          '<div><div><b>' + esc(r.venue) + '</b></div>' +
+          '<div style="opacity:.85">' + esc(r.course) + '</div>' +
+          '<div style="opacity:.6;font-size:10.5px;">' + fmtDateRange(r.start, r.end) + '</div>' +
+          '</div></div>');
+      }
+    }
+    const tip = tipParts.join('');
+
+    html += '<div class="' + classes.join(' ') + '" data-tip="' + esc(tip) + '">' + d + dotsHtml + '</div>';
+  }
+
+  html += '</div></div>';
+  return html;
+}
+
+const tooltip = document.getElementById('tooltip');
+function bindTooltips(){
+  document.querySelectorAll('.day[data-tip]').forEach(el => {
+    el.addEventListener('mouseenter', showTip);
+    el.addEventListener('mousemove', moveTip);
+    el.addEventListener('mouseleave', hideTip);
+  });
+}
+function showTip(e){
+  tooltip.innerHTML = e.currentTarget.getAttribute('data-tip');
+  tooltip.style.display = 'block';
+  moveTip(e);
+}
+function moveTip(e){
+  const pad = 12;
+  const rect = tooltip.getBoundingClientRect();
+  let x = e.clientX + pad, y = e.clientY + pad;
+  if (x + rect.width > window.innerWidth - 8) x = e.clientX - rect.width - pad;
+  if (y + rect.height > window.innerHeight - 8) y = e.clientY - rect.height - pad;
+  tooltip.style.left = Math.max(8, x) + 'px';
+  tooltip.style.top = Math.max(8, y) + 'px';
+}
+function hideTip(){ tooltip.style.display = 'none'; }
+
+function render(){
+  document.getElementById('grid').innerHTML =
+    Array.from({length:12}, (_,i)=>renderMonth(YEAR, i)).join('');
+  bindTooltips();
+  updateSummary();
+}
+
+buildFilterUI();
+render();
+
+</script>
+</body>
+</html>
