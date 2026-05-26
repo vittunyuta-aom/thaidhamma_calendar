@@ -42,6 +42,9 @@ README.md
 - **Courses** — edit `dhamma_events.json`. Each entry: `start`, `end`, `location` (shown as
   venue), `course`, `url` (registration link), plus `type`/`gender`/`age` (not used by the UI).
   Registration URLs follow `...&task=coursedetail&id=<ID>&Itemid=39` on thaidhamma.net.
+  Note the `course` string text drives two filters: the **category** (code stripped) and the
+  **duration** bucket (the "X วัน" number). Removing/changing that number reassigns its duration
+  (no number → `อื่นๆ`).
 - **Holidays** — edit `holidays_bot.json` (bank) and/or `holidays_general.json` (public). Each is
   a `"YYYY-MM-DD": { "th": ..., "en": ... }` map. Put a date in both files if it's both a bank and
   public holiday.
