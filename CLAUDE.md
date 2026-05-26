@@ -1,6 +1,6 @@
 # thaidhamma_calendar
 
-A static single-page Thai Buddhist Dhamma calendar for 2026 (Buddhist year 2569). Displays Thai public holidays, bank holidays, bridge days, and retreat/course schedules at major Thai meditation centers. Hosted on GitHub Pages.
+A static single-page Thai Buddhist Dhamma calendar (currently spanning 2026–2027 / พ.ศ. 2569–2570, driven by the data). Displays Thai public holidays, bank holidays, bridge days, and retreat/course schedules at major Thai meditation centers. Hosted on GitHub Pages.
 
 ## Project Structure
 
@@ -28,9 +28,11 @@ README.md
   present in the data** (events + holidays + bridges), spanning year boundaries (e.g. 2026→2027).
   If opened after all data has passed, it falls back to the full data range. The header title/range
   (`#calTitle`/`#calSub`) is set dynamically.
-- **Filtering** — venue + course dropdowns and a `showBridges` toggle. The course filter groups by
-  **category**: `courseCategory()` strips the leading course code (`DSN260008 `) so ~11 categories
-  show instead of one-per-course. The day popover still displays the full course string (with code).
+- **Filtering** — four multi-select dropdowns driven by the `FILTERS` registry (venue, course,
+  duration, start-month) plus a `showBridges` toggle. Course groups by **category**
+  (`courseCategory()` strips the `DSN260008 ` code → ~11 categories); duration buckets by the stated
+  "X วัน" (`courseDuration()`, else `อื่นๆ`); month by `start` YYYY-MM. The day popover still shows
+  the full course string (with code). To add a filter, add one entry to `FILTERS` + its dropdown markup.
 - **Popover** — interactive `#tooltip`: hover-open and reachable on desktop, tap-to-open on
   mobile; each course row is an `<a href>` to its registration page (`r.url`)
 - **Local run** — must be served over HTTP (fetch is blocked on `file://`)
@@ -48,6 +50,10 @@ README.md
 `RETREATS`, `allVenues`, `allCourses` are derived from the events at load. Venue colors are
 auto-assigned by index from the `palette` array into `venueColor` — no manual color map.
 
+**Year-boundary trap:** a course that starts in December and ends in January must have the correct
+end *year* (e.g. start `2026-12-30`, end `2027-01-10`). If `end < start` the course silently fails
+to render (`inRange` does string comparison). When importing/scraping data, check for `end < start`.
+
 ## Language
 
 UI is bilingual Thai/English. Thai text uses Sarabun / Noto Sans Thai fonts loaded from Google Fonts.
@@ -55,6 +61,12 @@ UI is bilingual Thai/English. Thai text uses Sarabun / Noto Sans Thai fonts load
 ## Deployment
 
 Push to `main` → GitHub Pages auto-deploys. No CI pipeline.
+
+**Caching:** after pushing data/code changes, GitHub Pages and browsers serve cached copies, so
+updates may not appear immediately. The HTML self-heals (~10 min Pages cache); the JSON can linger
+longer. To verify a deploy, fetch the live file with cache disabled rather than trusting a normal
+browser load. The `fetch()` calls do not yet send `cache: 'no-cache'` — if stale data becomes a
+recurring annoyance, add that option (revalidates via ETag) or a `?v=<version>` query stamp.
 
 ## Conventions
 

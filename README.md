@@ -56,7 +56,25 @@ Two separate files, each a date-keyed map:
 
 A date that appears in **both** files is rendered as a combined holiday (bank + public). The app
 merges the two maps at load time. Bridge days remain defined in the `BRIDGES` object inside
-`index.html`.
+`index.html`. Holidays are populated for **2026 and 2027 (พ.ศ. 2569–2570)**.
+
+## Data sources / references
+
+Verify against the official announcements before relying on these dates:
+
+- **Course schedule** — [thaidhamma.net schedule](https://www.thaidhamma.net/index.php?option=com_thaidhamma&Itemid=39&filter_locationid=0&lang=th); each event's `url` links to its `coursedetail` registration page.
+- **Bank holidays (BOT)** — [Bank of Thailand financial-institution holidays](https://www.bot.or.th/th/financial-institutions-holiday.html)
+- **Public / bank holidays (Thai calendar)** — [myhora 2570](https://myhora.com/calendar/holiday-2570.aspx) · [kapook 2570](https://calendar.kapook.com/2570/holiday)
+
+> Note: 2027 Buddhist-holiday and in-lieu (ชดเชย) dates, and วันพืชมงคล (Royal Ploughing, announced
+> later), should be re-checked against the official 2570 cabinet/BOT announcements. The calendar
+> currently displays through Feb 2027, so only Jan–Feb 2027 holidays are visible today.
+
+## Filters
+
+The toolbar offers four multi-select filters — **สถานที่** (venue), **หลักสูตร** (course category, code
+stripped), **ระยะเวลา** (duration: 1/3/10/20/30/45/60 วัน + อื่นๆ), **เดือนเริ่ม** (start month) — plus a
+**Bridge Day** show/hide toggle.
 
 ## Running locally
 

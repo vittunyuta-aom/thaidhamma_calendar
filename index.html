@@ -158,6 +158,32 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
       <div id="courseList"></div>
     </div>
   </div>
+  <div class="dd" id="ddDuration">
+    <button type="button" onclick="toggleDD('ddDuration')">
+      <span>ระยะเวลา — <span id="durationSummary">ทั้งหมด</span></span>
+      <span class="caret">▾</span>
+    </button>
+    <div class="menu">
+      <div class="row">
+        <button type="button" onclick="setAll('duration', true)">เลือกทั้งหมด</button>
+        <button type="button" onclick="setAll('duration', false)">ล้าง</button>
+      </div>
+      <div id="durationList"></div>
+    </div>
+  </div>
+  <div class="dd" id="ddMonth">
+    <button type="button" onclick="toggleDD('ddMonth')">
+      <span>เดือนเริ่ม — <span id="monthSummary">ทั้งหมด</span></span>
+      <span class="caret">▾</span>
+    </button>
+    <div class="menu">
+      <div class="row">
+        <button type="button" onclick="setAll('month', true)">เลือกทั้งหมด</button>
+        <button type="button" onclick="setAll('month', false)">ล้าง</button>
+      </div>
+      <div id="monthList"></div>
+    </div>
+  </div>
   <label class="toggle"><input type="checkbox" id="bridgeToggle" checked onchange="toggleBridges(this.checked)" /> แสดง Bridge Day</label>
   <button class="reset" type="button" onclick="resetFilters()">รีเซ็ตตัวกรอง</button>
   <span class="count" id="countLine"></span>
@@ -214,12 +240,16 @@ const BRIDGES = {
 let RETREATS = [];
 let allVenues = [];
 let allCourses = [];
+let allDurations = [];
+let allMonths = [];
 const venueColor = {};
 const palette = ['#065f46','#0f766e','#1d4ed8','#7c3aed','#be185d','#b45309','#0e7490','#4d7c0f','#92400e'];
 
 const state = {
   venues: new Set(),
   courses: new Set(),
+  durations: new Set(),
+  months: new Set(),
   showBridges: true,
 };
 
@@ -227,17 +257,34 @@ const state = {
 function courseCategory(course){
   return course.replace(/^[A-Za-z]{2,6}\d{6}\s+/, '').trim() || course;
 }
+// Duration bucket from the stated "X วัน" in the course name; otherwise 'อื่นๆ'.
+function courseDuration(course){
+  const m = course.match(/(\d+)\s*วัน/);
+  return m ? m[1] + ' วัน' : 'อื่นๆ';
+}
+function durationSort(a, b){
+  const na = parseInt(a, 10), nb = parseInt(b, 10);
+  if (isNaN(na)) return 1;
+  if (isNaN(nb)) return -1;
+  return na - nb;
+}
 
 function initData(events){
   RETREATS = events.map(e => ({
     start:e.start, end:e.end, venue:e.location, course:e.course, url:e.url,
     category: courseCategory(e.course),
+    duration: courseDuration(e.course),
+    startMonth: e.start.substring(0, 7),
   }));
   allVenues = Array.from(new Set(RETREATS.map(r => r.venue))).sort();
   allCourses = Array.from(new Set(RETREATS.map(r => r.category))).sort();   // categories, not codes
+  allDurations = Array.from(new Set(RETREATS.map(r => r.duration))).sort(durationSort);
+  allMonths = Array.from(new Set(RETREATS.map(r => r.startMonth))).sort();
   allVenues.forEach((v,i) => venueColor[v] = palette[i % palette.length]);
   state.venues = new Set(allVenues);
   state.courses = new Set(allCourses);
+  state.durations = new Set(allDurations);
+  state.months = new Set(allMonths);
 }
 
 const MONTH_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -250,42 +297,44 @@ function key(y,m,d){ return y + '-' + String(m).padStart(2,'0') + '-' + String(d
 function inRange(start, end, target){ return target >= start && target <= end; }
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-function buildFilterUI(){
-  const venueList = document.getElementById('venueList');
-  venueList.innerHTML = allVenues.map(v =>
-    '<label><input type="checkbox" data-kind="venue" value="' + esc(v) + '" checked />' +
-    '<span class="swatch" style="background:' + venueColor[v] + '"></span>' +
-    '<span>' + esc(v) + '</span></label>'
-  ).join('');
-  venueList.querySelectorAll('input').forEach(cb => cb.addEventListener('change', onFilterChange));
+function monthLabel(ym){ const [y,m] = ym.split('-').map(Number); return MONTH_TH_SHORT[m-1] + ' ' + (y+543); }
 
-  const courseList = document.getElementById('courseList');
-  courseList.innerHTML = allCourses.map(c =>
-    '<label><input type="checkbox" data-kind="course" value="' + esc(c) + '" checked />' +
-    '<span>' + esc(c) + '</span></label>'
+// Registry of multi-select filters. Each reads its option list and Set lazily.
+const FILTERS = {
+  venue:    { all:()=>allVenues,    set:()=>state.venues,    listId:'venueList',    summaryId:'venueSummary',    swatch:true },
+  course:   { all:()=>allCourses,   set:()=>state.courses,   listId:'courseList',   summaryId:'courseSummary' },
+  duration: { all:()=>allDurations, set:()=>state.durations, listId:'durationList', summaryId:'durationSummary' },
+  month:    { all:()=>allMonths,    set:()=>state.months,    listId:'monthList',    summaryId:'monthSummary', label:monthLabel },
+};
+
+function buildList(kind){
+  const cfg = FILTERS[kind];
+  const el = document.getElementById(cfg.listId);
+  el.innerHTML = cfg.all().map(v =>
+    '<label><input type="checkbox" data-kind="' + kind + '" value="' + esc(v) + '" checked />' +
+    (cfg.swatch ? '<span class="swatch" style="background:' + venueColor[v] + '"></span>' : '') +
+    '<span>' + esc(cfg.label ? cfg.label(v) : v) + '</span></label>'
   ).join('');
-  courseList.querySelectorAll('input').forEach(cb => cb.addEventListener('change', onFilterChange));
+  el.querySelectorAll('input').forEach(cb => cb.addEventListener('change', onFilterChange));
 }
+function buildFilterUI(){ Object.keys(FILTERS).forEach(buildList); }
 
 function onFilterChange(e){
-  const kind = e.target.dataset.kind;
-  const val = e.target.value;
-  const set = kind === 'venue' ? state.venues : state.courses;
-  if (e.target.checked) set.add(val); else set.delete(val);
+  const set = FILTERS[e.target.dataset.kind].set();
+  if (e.target.checked) set.add(e.target.value); else set.delete(e.target.value);
   render();
 }
 
 function setAll(kind, on){
-  const list = kind === 'venue' ? allVenues : allCourses;
-  const set = kind === 'venue' ? state.venues : state.courses;
+  const cfg = FILTERS[kind];
+  const set = cfg.set();
   set.clear();
-  if (on) list.forEach(v => set.add(v));
-  const listId = kind === 'venue' ? 'venueList' : 'courseList';
-  document.querySelectorAll('#' + listId + ' input').forEach(cb => cb.checked = on);
+  if (on) cfg.all().forEach(v => set.add(v));
+  document.querySelectorAll('#' + cfg.listId + ' input').forEach(cb => cb.checked = on);
   render();
 }
 
-function resetFilters(){ setAll('venue', true); setAll('course', true); }
+function resetFilters(){ Object.keys(FILTERS).forEach(k => setAll(k, true)); }
 
 function toggleDD(id){
   const el = document.getElementById(id);
@@ -298,21 +347,21 @@ document.addEventListener('click', (e) => {
 });
 
 function activeRetreats(){
-  return RETREATS.filter(r => state.venues.has(r.venue) && state.courses.has(r.category));
+  return RETREATS.filter(r =>
+    state.venues.has(r.venue) && state.courses.has(r.category) &&
+    state.durations.has(r.duration) && state.months.has(r.startMonth));
 }
 function retreatsOn(dateStr){
   return activeRetreats().filter(r => inRange(r.start, r.end, dateStr));
 }
 
 function updateSummary(){
-  const vS = document.getElementById('venueSummary');
-  const cS = document.getElementById('courseSummary');
-  vS.textContent = state.venues.size === allVenues.length ? 'ทั้งหมด' :
-                   state.venues.size === 0 ? '— ไม่เลือก —' :
-                   state.venues.size + '/' + allVenues.length;
-  cS.textContent = state.courses.size === allCourses.length ? 'ทั้งหมด' :
-                   state.courses.size === 0 ? '— ไม่เลือก —' :
-                   state.courses.size + '/' + allCourses.length;
+  Object.keys(FILTERS).forEach(k => {
+    const cfg = FILTERS[k], el = document.getElementById(cfg.summaryId);
+    if (!el) return;
+    const n = cfg.set().size, total = cfg.all().length;
+    el.textContent = n === total ? 'ทั้งหมด' : n === 0 ? '— ไม่เลือก —' : n + '/' + total;
+  });
   document.getElementById('countLine').textContent =
     'แสดง ' + activeRetreats().length + ' คอร์ส จากทั้งหมด ' + RETREATS.length;
 }
