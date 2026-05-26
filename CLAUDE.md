@@ -24,8 +24,13 @@ README.md
   holiday maps into `HOLIDAYS` (a date in both → `type:'both'`, bank-only → `'bot'`,
   public-only → `'pub'`). `BRIDGES` stays hardcoded in the `<script>` tag.
 - **CSS** — CSS custom properties for color theming; responsive grid (4 → 3 → 2 → 1 cols)
-- **Rendering** — vanilla JS builds the 12-month calendar grid dynamically
-- **Filtering** — dropdown multi-select by venue and course; `showBridges` toggle
+- **Rendering** — `render()` shows months from the **current month** through the **latest month
+  present in the data** (events + holidays + bridges), spanning year boundaries (e.g. 2026→2027).
+  If opened after all data has passed, it falls back to the full data range. The header title/range
+  (`#calTitle`/`#calSub`) is set dynamically.
+- **Filtering** — venue + course dropdowns and a `showBridges` toggle. The course filter groups by
+  **category**: `courseCategory()` strips the leading course code (`DSN260008 `) so ~11 categories
+  show instead of one-per-course. The day popover still displays the full course string (with code).
 - **Popover** — interactive `#tooltip`: hover-open and reachable on desktop, tap-to-open on
   mobile; each course row is an `<a href>` to its registration page (`r.url`)
 - **Local run** — must be served over HTTP (fetch is blocked on `file://`)

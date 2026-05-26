@@ -113,8 +113,8 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
 
 <div class="topbar">
   <div>
-    <h1>ปฏิทิน 2569 — ตารางปฏิบัติธรรม &amp; วันหยุด</h1>
-    <div class="sub">Dhamma Retreat Schedule &amp; Thailand Holiday Planner 2026</div>
+    <h1 id="calTitle">ปฏิทินปฏิบัติธรรม &amp; วันหยุด</h1>
+    <div class="sub" id="calSub">Dhamma Retreat &amp; Thailand Holiday Planner</div>
   </div>
   <div class="nav">
     <button class="icon" title="พิมพ์ / Save as PDF" onclick="window.print()">⎙</button>
@@ -180,8 +180,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
 
 <script>
 
-const YEAR = 2026;
-
 // HOLIDAYS — merged at runtime from holidays_bot.json (bank) + holidays_general.json (public).
 // A date present in both lists is type 'both'; bank-only -> 'bot'; public-only -> 'pub'.
 let HOLIDAYS = {};
@@ -225,10 +223,18 @@ const state = {
   showBridges: true,
 };
 
+// Strip the leading course code (e.g. "DSN260008 ") to get a groupable category.
+function courseCategory(course){
+  return course.replace(/^[A-Za-z]{2,6}\d{6}\s+/, '').trim() || course;
+}
+
 function initData(events){
-  RETREATS = events.map(e => ({ start:e.start, end:e.end, venue:e.location, course:e.course }));
+  RETREATS = events.map(e => ({
+    start:e.start, end:e.end, venue:e.location, course:e.course, url:e.url,
+    category: courseCategory(e.course),
+  }));
   allVenues = Array.from(new Set(RETREATS.map(r => r.venue))).sort();
-  allCourses = Array.from(new Set(RETREATS.map(r => r.course))).sort();
+  allCourses = Array.from(new Set(RETREATS.map(r => r.category))).sort();   // categories, not codes
   allVenues.forEach((v,i) => venueColor[v] = palette[i % palette.length]);
   state.venues = new Set(allVenues);
   state.courses = new Set(allCourses);
@@ -292,7 +298,7 @@ document.addEventListener('click', (e) => {
 });
 
 function activeRetreats(){
-  return RETREATS.filter(r => state.venues.has(r.venue) && state.courses.has(r.course));
+  return RETREATS.filter(r => state.venues.has(r.venue) && state.courses.has(r.category));
 }
 function retreatsOn(dateStr){
   return activeRetreats().filter(r => inRange(r.start, r.end, dateStr));
@@ -314,8 +320,9 @@ function updateSummary(){
 function fmtDateRange(startStr, endStr){
   const [sy,sm,sd] = startStr.split('-').map(Number);
   const [ey,em,ed] = endStr.split('-').map(Number);
-  if (sm === em) return sd + ' – ' + ed + ' ' + MONTH_TH_SHORT[sm-1] + ' ' + (sy+543);
-  return sd + ' ' + MONTH_TH_SHORT[sm-1] + ' – ' + ed + ' ' + MONTH_TH_SHORT[em-1] + ' ' + (sy+543);
+  if (sy === ey && sm === em) return sd + ' – ' + ed + ' ' + MONTH_TH_SHORT[sm-1] + ' ' + (sy+543);
+  if (sy === ey) return sd + ' ' + MONTH_TH_SHORT[sm-1] + ' – ' + ed + ' ' + MONTH_TH_SHORT[em-1] + ' ' + (sy+543);
+  return sd + ' ' + MONTH_TH_SHORT[sm-1] + ' ' + (sy+543) + ' – ' + ed + ' ' + MONTH_TH_SHORT[em-1] + ' ' + (ey+543);
 }
 
 function renderMonth(year, monthIdx){
@@ -426,11 +433,44 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('.day') && !e.target.closest('#tooltip')) hideTip();
 });
 
+// Earliest/latest dates present in all loaded data (events + holidays + bridges).
+function dataDateBounds(){
+  let min = null, max = null;
+  const consider = s => { if (!s) return; if (min === null || s < min) min = s; if (max === null || s > max) max = s; };
+  RETREATS.forEach(r => { consider(r.start); consider(r.end); });
+  Object.keys(HOLIDAYS).forEach(consider);
+  Object.keys(BRIDGES).forEach(consider);
+  return { min, max };
+}
+const ymAbs = (y, m0) => y * 12 + m0;                       // m0 = 0-based month
+const absToYM = a => ({ y: Math.floor(a / 12), m: a % 12 });
+
+function updateTitle(startAbs, endAbs){
+  const s = absToYM(startAbs), e = absToYM(endAbs);
+  const span = MONTH_TH_SHORT[s.m] + ' ' + (s.y + 543) + ' – ' + MONTH_TH_SHORT[e.m] + ' ' + (e.y + 543);
+  const t = document.getElementById('calTitle'); if (t) t.textContent = 'ปฏิทินปฏิบัติธรรม & วันหยุด · ' + span;
+  const sub = document.getElementById('calSub'); if (sub) sub.textContent = 'Dhamma Retreat & Thailand Holiday Planner · ' + span;
+}
+
 function render(){
-  document.getElementById('grid').innerHTML =
-    Array.from({length:12}, (_,i)=>renderMonth(YEAR, i)).join('');
+  const grid = document.getElementById('grid');
+  const b = dataDateBounds();
+  if (!b.max){ grid.innerHTML = ''; return; }
+  const [maxY, maxM] = b.max.split('-').map(Number);
+  const [minY, minM] = b.min.split('-').map(Number);
+  const endAbs = ymAbs(maxY, maxM - 1);
+  const minAbs = ymAbs(minY, minM - 1);
+  const now = new Date();
+  let startAbs = ymAbs(now.getFullYear(), now.getMonth());  // current month
+  if (startAbs > endAbs) startAbs = minAbs;                 // opened after data ended → show all
+  if (startAbs < minAbs) startAbs = minAbs;                 // no empty months before data starts
+
+  let html = '';
+  for (let a = startAbs; a <= endAbs; a++){ const ym = absToYM(a); html += renderMonth(ym.y, ym.m); }
+  grid.innerHTML = html;
   bindTooltips();
   updateSummary();
+  updateTitle(startAbs, endAbs);
 }
 
 function toggleBridges(on){ state.showBridges = on; render(); }
