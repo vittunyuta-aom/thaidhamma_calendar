@@ -1,15 +1,16 @@
 # thaidhamma_calendar
 
-A simplified, single-page **Thai Dhamma retreat calendar for 2026 (พ.ศ. 2569)**. It overlays
-meditation retreat courses on a 12-month calendar together with Thai public/bank holidays and
-"bridge days" (take 1 day of leave for a long weekend).
+A simplified, single-page **Thai Dhamma retreat calendar for 2026–2027 (พ.ศ. 2569–2570)**. It
+overlays meditation retreat courses on a rolling calendar together with Thai public/bank holidays
+and "bridge days" (take 1 day of leave for a long weekend).
 
 Data is a simplified view of the schedule at
-[thaidhamma.net](https://www.thaidhamma.net/index.php?option=com_thaidhamma&Itemid=39&filter_locationid=0&lang=th).
+[thaidhamma.net](https://www.thaidhamma.net/index.php?option=com_thaidhamma&Itemid=39&filter_locationid=0&lang=th)
+(2026) and the official 2570 course-schedule PDF (2027).
 
 ## Features
 
-- 12-month 2026 calendar, Buddhist year labels (BE = CE + 543)
+- Rolling calendar from the current month through the end of the data, Buddhist year labels (BE = CE + 543)
 - Thai public holidays + bank-only holidays, color-coded
 - Bridge-day suggestions, with a **toggle to show/hide them**
 - Retreat courses loaded from `dhamma_events.json`, color-coded by venue
@@ -43,6 +44,23 @@ The calendar uses `start`, `end`, `location` (shown as venue), `course`, and `ur
 registration link). To change the displayed courses, edit `dhamma_events.json` — no code changes
 needed.
 
+**2027 (พ.ศ. 2570) entries differ in two ways**, because they come from the official schedule PDF
+rather than the website:
+
+- `url` is `""` and `course` carries **no course code** (e.g. `หลักสูตรวิปัสสนา (10วัน)`, not
+  `DAB270001 …`). thaidhamma.net had not published 2027 courses when this data was added, so no
+  `coursedetail` IDs exist yet. Rows render as plain text with no "สมัคร / Register" link. Backfill
+  the codes and URLs once registration opens.
+- `type` / `gender` / `age` are filled with the common defaults; the PDF only marks which courses
+  monks/novices may join (`*` → `type` includes `พระ`).
+
+Known gaps in the 2027 data, both faithful to the source PDF:
+
+- **ศูนย์ธรรมกาญจนา (กาญจนบุรี) has no 2027 courses** — its column reads
+  "ยังไม่กำหนดตารางอบรม" (schedule not yet determined).
+- **ศูนย์ธรรมจันทปภา, 16–28 พ.ย. 2570** is printed as a 10-day course spanning 13 days. Every other
+  centre that fortnight reads 17–28. Reproduced verbatim; verify with the centre before relying on it.
+
 ### `holidays_bot.json` and `holidays_general.json` — holidays
 
 Two separate files, each a date-keyed map:
@@ -62,13 +80,14 @@ merges the two maps at load time. Bridge days remain defined in the `BRIDGES` ob
 
 Verify against the official announcements before relying on these dates:
 
-- **Course schedule** — [thaidhamma.net schedule](https://www.thaidhamma.net/index.php?option=com_thaidhamma&Itemid=39&filter_locationid=0&lang=th); each event's `url` links to its `coursedetail` registration page.
+- **Course schedule (2026)** — [thaidhamma.net schedule](https://www.thaidhamma.net/index.php?option=com_thaidhamma&Itemid=39&filter_locationid=0&lang=th); each event's `url` links to its `coursedetail` registration page.
+- **Course schedule (2027)** — the official "กำหนดการอบรมวิปัสสนากรรมฐาน ณ ศูนย์วิปัสสนาฯ ต่าง ๆ ปี พ.ศ. 2570" PDF (13 venues × 12 months). Re-check against thaidhamma.net once 2027 registration opens.
 - **Bank holidays (BOT)** — [Bank of Thailand financial-institution holidays](https://www.bot.or.th/th/financial-institutions-holiday.html)
 - **Public / bank holidays (Thai calendar)** — [myhora 2570](https://myhora.com/calendar/holiday-2570.aspx) · [kapook 2570](https://calendar.kapook.com/2570/holiday)
 
 > Note: 2027 Buddhist-holiday and in-lieu (ชดเชย) dates, and วันพืชมงคล (Royal Ploughing, announced
-> later), should be re-checked against the official 2570 cabinet/BOT announcements. The calendar
-> currently displays through Feb 2027, so only Jan–Feb 2027 holidays are visible today.
+> later), should be re-checked against the official 2570 cabinet/BOT announcements. With the 2027
+> courses loaded, the calendar now runs through Jan 2028, so all 2027 holidays are visible.
 
 ## Filters
 

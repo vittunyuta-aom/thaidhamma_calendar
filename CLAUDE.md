@@ -1,6 +1,6 @@
 # thaidhamma_calendar
 
-A static single-page Thai Buddhist Dhamma calendar (currently spanning 2026–2027 / พ.ศ. 2569–2570, driven by the data). Displays Thai public holidays, bank holidays, bridge days, and retreat/course schedules at major Thai meditation centers. Hosted on GitHub Pages.
+A static single-page Thai Buddhist Dhamma calendar (course data spans Apr 2026 – Jan 2028 / พ.ศ. 2569–2571, driven by the data). Displays Thai public holidays, bank holidays, bridge days, and retreat/course schedules at major Thai meditation centers. Hosted on GitHub Pages.
 
 ## Project Structure
 
@@ -10,10 +10,12 @@ dhamma_events.json     — retreat/course schedule (loaded via fetch)
 holidays_bot.json      — bank (BOT) holidays, date-keyed map (loaded via fetch)
 holidays_general.json  — general public holidays, date-keyed map (loaded via fetch)
 dhamma_data.json       — reference notes data (unused by UI)
+tools/                 — Node importer for the yearly schedule PDF (dev-only, not served)
 README.md
 ```
 
 **No build step.** Open `index.html` directly in a browser, or serve with any static HTTP server.
+`tools/` is developer tooling only — nothing there runs on the site.
 
 ## Architecture
 
@@ -45,6 +47,11 @@ README.md
   Note the `course` string text drives two filters: the **category** (code stripped) and the
   **duration** bucket (the "X วัน" number). Removing/changing that number reassigns its duration
   (no number → `อื่นๆ`).
+- **Course codes are optional.** `courseCategory()` strips a leading code only if present, so the
+  2027 entries (no code, `url: ""`) group into the *same* categories as the coded 2026 ones. When
+  adding data, reuse an existing category string verbatim — a new wording silently creates a new
+  หลักสูตร filter entry. `index.html` already renders empty-`url` rows as plain `<div>`s instead of
+  links, so no code change is needed to omit a registration link.
 - **Holidays** — edit `holidays_bot.json` (bank) and/or `holidays_general.json` (public). Each is
   a `"YYYY-MM-DD": { "th": ..., "en": ... }` map. Put a date in both files if it's both a bank and
   public holiday.
@@ -56,6 +63,27 @@ auto-assigned by index from the `palette` array into `venueColor` — no manual 
 **Year-boundary trap:** a course that starts in December and ends in January must have the correct
 end *year* (e.g. start `2026-12-30`, end `2027-01-10`). If `end < start` the course silently fails
 to render (`inRange` does string comparison). When importing/scraping data, check for `end < start`.
+
+**Day-count checksum.** `end - start` is fixed per course type across the whole dataset — use it to
+catch import errors that rendering will not surface:
+
+| type | days | type | days | type | days |
+|----|----|----|----|----|----|
+| 1 วัน | 0 | 10 วัน (incl. พิเศษ) | 11 | 30 วัน | 31 |
+| 3 วัน | 3 | 20 วัน | 21 | 45 วัน | 46 |
+| สติปัฏฐาน | 9 | | | 60 วัน | 61 |
+
+One known real exception: ศูนย์ธรรมจันทปภา `2027-11-16`–`2027-11-28` (12d) is a typo in the source
+2570 PDF, kept verbatim. Note that **courses at one venue may legitimately overlap** (large centres
+run parallel courses), so overlap is not an error signal.
+
+**Importing a yearly schedule PDF.** Use `node tools/import-schedule.js <pdf>` (dry run) then
+`--merge`. See `tools/README.md`. It reads the PDF content stream directly because
+`pdftotext` mangles Thai combining marks (`สตปิ ฏั ฐาน`) and its columns can't be trusted; the
+table's ruled lines give exact column/month boundaries and the ToUnicode CMaps give clean text.
+Venue names, the year, and the grid are auto-detected. In the PDF a trailing `71` means BE 2571 =
+**2028**, and `*` marks monk/novice-eligible courses. The importer enforces the checksum above and
+refuses to merge on any warning unless `--force`.
 
 ## Language
 
