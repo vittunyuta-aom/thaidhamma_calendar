@@ -23,6 +23,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
   position:sticky;top:0;z-index:50}
 .topbar h1{margin:0;font-size:20px;font-weight:700}
 .topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
+.topbar .sub.updated{font-size:11px;opacity:.7}
 .topbar .nav{display:flex;gap:8px}
 .topbar button.icon{background:rgba(255,255,255,.15);color:#fff;border:0;width:32px;height:32px;
   border-radius:50%;cursor:pointer;font-size:14px}
@@ -115,6 +116,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
   <div>
     <h1 id="calTitle">ปฏิทินปฏิบัติธรรม &amp; วันหยุด</h1>
     <div class="sub" id="calSub">Dhamma Retreat &amp; Thailand Holiday Planner</div>
+    <div class="sub updated" id="calUpdated"></div>
   </div>
   <div class="nav">
     <button class="icon" title="พิมพ์ / Save as PDF" onclick="window.print()">⎙</button>
@@ -221,6 +223,9 @@ function mergeHolidays(botMap, genMap){
   }
   HOLIDAYS = merged;
 }
+
+// Date the data (courses/holidays/bridges) was last updated — bump on every data change.
+const DATA_UPDATED = '2026-11-22';
 
 const BRIDGES = {
   '2026-04-07': 'ลา 1 วัน หยุดยาว 4 – 10 เม.ย. (จักรี + สงกรานต์)',
@@ -499,6 +504,12 @@ function updateTitle(startAbs, endAbs){
   const span = MONTH_TH_SHORT[s.m] + ' ' + (s.y + 543) + ' – ' + MONTH_TH_SHORT[e.m] + ' ' + (e.y + 543);
   const t = document.getElementById('calTitle'); if (t) t.textContent = 'ปฏิทินปฏิบัติธรรม & วันหยุด · ' + span;
   const sub = document.getElementById('calSub'); if (sub) sub.textContent = 'Dhamma Retreat & Thailand Holiday Planner · ' + span;
+  const up = document.getElementById('calUpdated');
+  if (up) {
+    const [y, m, d] = DATA_UPDATED.split('-').map(Number);
+    const en = new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    up.textContent = 'อัปเดตข้อมูล ' + d + ' ' + MONTH_TH_SHORT[m - 1] + ' ' + (y + 543) + ' · Updated ' + en;
+  }
 }
 
 function render(){

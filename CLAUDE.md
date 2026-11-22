@@ -57,6 +57,8 @@ README.md
   a `"YYYY-MM-DD": { "th": ..., "en": ... }` map. Put a date in both files if it's both a bank and
   public holiday.
 - **Bridge days** — still the `BRIDGES` object in `index.html` (`"YYYY-MM-DD"` → Thai string).
+- **Last-updated date** — after any data change (courses, holidays, bridges), set `DATA_UPDATED`
+  in `index.html` to today's date (`"YYYY-MM-DD"`). The header shows it as "อัปเดตข้อมูล …".
 
 `RETREATS`, `allVenues`, `allCourses` are derived from the events at load. Venue colors are
 auto-assigned by index from the `palette` array into `venueColor` — no manual color map.

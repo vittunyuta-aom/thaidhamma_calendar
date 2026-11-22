@@ -17,3 +17,5 @@ Notes:
   row in the day popover links to `url`.
 - `allVenues`, `allCourses`, and venue colors are derived automatically. A new location auto-gets a
   color from the `palette` array in index.html (extend `palette` only if locations exceed 9).
+
+After adding, set `DATA_UPDATED` in `index.html` to today's date so the header's "อัปเดตข้อมูล" date stays current.

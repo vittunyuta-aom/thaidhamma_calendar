@@ -16,3 +16,5 @@ Steps:
 2. Ask for the date and the Thai (+ English) name (or Thai description for a bridge day).
 3. Add to the correct file(s), keeping keys in date order.
 4. Show the added entry and confirm.
+
+After adding, set `DATA_UPDATED` in `index.html` to today's date so the header's "อัปเดตข้อมูล" date stays current.
