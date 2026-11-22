@@ -6,7 +6,7 @@ and "bridge days" (take 1 day of leave for a long weekend).
 
 Data is a simplified view of the schedule at
 [thaidhamma.net](https://www.thaidhamma.net/index.php?option=com_thaidhamma&Itemid=39&filter_locationid=0&lang=th)
-(2026) and the official 2570 course-schedule PDF (2027).
+and [Dhammatapoda](https://course.dhammatapoda.org/course) (เขาใหญ่).
 
 ## Features
 
@@ -16,7 +16,7 @@ Data is a simplified view of the schedule at
 - Retreat courses loaded from `dhamma_events.json`, color-coded by venue
 - Filter by venue (สถานที่) and by course (หลักสูตร)
 - Hover (desktop) or tap a day (mobile) to open a popover of that day's courses —
-  **click a course to jump to its registration page** on thaidhamma.net
+  **click a course to jump to its registration page** on thaidhamma.net or dhammatapoda.org
 - Print / Save-as-PDF friendly
 
 ## Data files
@@ -44,22 +44,15 @@ The calendar uses `start`, `end`, `location` (shown as venue), `course`, and `ur
 registration link). To change the displayed courses, edit `dhamma_events.json` — no code changes
 needed.
 
-**2027 (พ.ศ. 2570) entries differ in two ways**, because they come from the official schedule PDF
-rather than the website:
+The 2027 (พ.ศ. 2570) entries were first imported from the official schedule PDF (no codes, no
+links), then reconciled against the live websites on 2026-11-22: every course now carries its
+code and registration link, courses the sites had rescheduled were replaced with the site's
+dates, and the 26 Dhammatapoda 2027 courses were added. Dhammatapoda links point to each course's
+page (`https://course.dhammatapoda.org/course/detail/<CODE>`). PDF-imported rows keep default
+`type` / `gender` / `age` values.
 
-- `url` is `""` and `course` carries **no course code** (e.g. `หลักสูตรวิปัสสนา (10วัน)`, not
-  `DAB270001 …`). thaidhamma.net had not published 2027 courses when this data was added, so no
-  `coursedetail` IDs exist yet. Rows render as plain text with no "สมัคร / Register" link. Backfill
-  the codes and URLs once registration opens.
-- `type` / `gender` / `age` are filled with the common defaults; the PDF only marks which courses
-  monks/novices may join (`*` → `type` includes `พระ`).
-
-Known gaps in the 2027 data, both faithful to the source PDF:
-
-- **ศูนย์ธรรมกาญจนา (กาญจนบุรี) has no 2027 courses** — its column reads
-  "ยังไม่กำหนดตารางอบรม" (schedule not yet determined).
-- **ศูนย์ธรรมจันทปภา, 16–28 พ.ย. 2570** is printed as a 10-day course spanning 13 days. Every other
-  centre that fortnight reads 17–28. Reproduced verbatim; verify with the centre before relying on it.
+Known gap: **ศูนย์ธรรมกาญจนา (กาญจนบุรี) has no 2027 courses** — neither the PDF nor the website
+lists any yet.
 
 ### `holidays_bot.json` and `holidays_general.json` — holidays
 
@@ -80,8 +73,7 @@ merges the two maps at load time. Bridge days remain defined in the `BRIDGES` ob
 
 Verify against the official announcements before relying on these dates:
 
-- **Course schedule (2026)** — [thaidhamma.net schedule](https://www.thaidhamma.net/index.php?option=com_thaidhamma&Itemid=39&filter_locationid=0&lang=th); each event's `url` links to its `coursedetail` registration page.
-- **Course schedule (2027)** — the official "กำหนดการอบรมวิปัสสนากรรมฐาน ณ ศูนย์วิปัสสนาฯ ต่าง ๆ ปี พ.ศ. 2570" PDF (13 venues × 12 months). Re-check against thaidhamma.net once 2027 registration opens.
+- **Course schedule** — [thaidhamma.net schedule](https://www.thaidhamma.net/index.php?option=com_thaidhamma&Itemid=39&filter_locationid=0&lang=th) (each event's `url` links to its `coursedetail` registration page) and [Dhammatapoda](https://course.dhammatapoda.org/course). The official "กำหนดการอบรมวิปัสสนากรรมฐาน ณ ศูนย์วิปัสสนาฯ ต่าง ๆ ปี พ.ศ. 2570" PDF was the initial 2027 source; the websites win where they differ.
 - **Bank holidays (BOT)** — [Bank of Thailand financial-institution holidays](https://www.bot.or.th/th/financial-institutions-holiday.html)
 - **Public / bank holidays (Thai calendar)** — [myhora 2570](https://myhora.com/calendar/holiday-2570.aspx) · [kapook 2570](https://calendar.kapook.com/2570/holiday)
 

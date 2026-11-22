@@ -47,8 +47,9 @@ README.md
   Note the `course` string text drives two filters: the **category** (code stripped) and the
   **duration** bucket (the "X วัน" number). Removing/changing that number reassigns its duration
   (no number → `อื่นๆ`).
-- **Course codes are optional.** `courseCategory()` strips a leading code only if present, so the
-  2027 entries (no code, `url: ""`) group into the *same* categories as the coded 2026 ones. When
+  Dhammatapoda courses link to `https://course.dhammatapoda.org/course/detail/<CODE>`.
+- **Course codes are optional.** `courseCategory()` strips a leading code only if present, so
+  PDF-imported entries (no code, `url: ""`) group into the *same* categories as coded ones. When
   adding data, reuse an existing category string verbatim — a new wording silently creates a new
   หลักสูตร filter entry. `index.html` already renders empty-`url` rows as plain `<div>`s instead of
   links, so no code change is needed to omit a registration link.
@@ -73,8 +74,8 @@ catch import errors that rendering will not surface:
 | 3 วัน | 3 | 20 วัน | 21 | 45 วัน | 46 |
 | สติปัฏฐาน | 9 | | | 60 วัน | 61 |
 
-One known real exception: ศูนย์ธรรมจันทปภา `2027-11-16`–`2027-11-28` (12d) is a typo in the source
-2570 PDF, kept verbatim. Note that **courses at one venue may legitimately overlap** (large centres
+(The 2570 PDF's one exception, ศูนย์ธรรมจันทปภา `2027-11-16`, was a typo — the website says
+`2027-11-17`; fixed.) When reconciling PDF data with the website, the website wins. Note that **courses at one venue may legitimately overlap** (large centres
 run parallel courses), so overlap is not an error signal.
 
 **Importing a yearly schedule PDF.** Use `node tools/import-schedule.js <pdf>` (dry run) then
