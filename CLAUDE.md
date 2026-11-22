@@ -29,7 +29,8 @@ README.md
 - **Rendering** — `render()` shows months from the **current month** through the **latest month
   present in the data** (events + holidays + bridges), spanning year boundaries (e.g. 2026→2027).
   If opened after all data has passed, it falls back to the full data range. The header title/range
-  (`#calTitle`/`#calSub`) is set dynamically.
+  (`#calTitle`/`#calSub`) is set dynamically, and `#calUpdated` shows the data last-updated date
+  from the `DATA_UPDATED` constant (the date data last changed — not code changes).
 - **Filtering** — four multi-select dropdowns driven by the `FILTERS` registry (venue, course,
   duration, start-month) plus a `showBridges` toggle. Course groups by **category**
   (`courseCategory()` strips the `DSN260008 ` code → ~11 categories); duration buckets by the stated

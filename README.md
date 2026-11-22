@@ -17,6 +17,8 @@ and [Dhammatapoda](https://course.dhammatapoda.org/course) (เขาใหญ�
 - Filter by venue (สถานที่) and by course (หลักสูตร)
 - Hover (desktop) or tap a day (mobile) to open a popover of that day's courses —
   **click a course to jump to its registration page** on thaidhamma.net or dhammatapoda.org
+- Header shows the **data last-updated date** ("อัปเดตข้อมูล …"), taken from `DATA_UPDATED` in
+  `index.html` — bump it whenever course/holiday/bridge data changes (not for code-only changes)
 - Print / Save-as-PDF friendly
 
 ## Data files
